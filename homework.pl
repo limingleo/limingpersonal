@@ -1,3 +1,4 @@
+#!/usr/bin/perl -w
 my @sign = ('+','-');
 my @operand = (1..50);
 my @quizs;
