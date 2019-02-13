@@ -4,6 +4,37 @@ my @operand = (1..50);
 my @quizs;
 my $r_no = 0;
 my $w_no = 0;
+my @interval;
+my %secConvertHash;
+my $s_time = time();
+my $e_time;
+
+sub intDisp {
+	if($secConvertHash{'天'}) {
+		print $secConvertHash{'天'} . '天';
+	}
+	if($secConvertHash{'小时'}) {
+		print $secConvertHash{'小时'} . '小时';
+	}
+	if($secConvertHash{'分钟'}) {
+		print $secConvertHash{'分钟'} . '分钟';
+	}
+	if($secConvertHash{'秒'}) {
+		print $secConvertHash{'秒'} . '秒';
+	}
+}
+
+sub intStore {
+	my @string;
+	my $start = shift;
+	my $end = shift;
+	my $interval = $end - $start;
+	$secConvertHash{'秒数'} = $interval;
+	$secConvertHash{'天'} = int($interval / 86400);
+	$secConvertHash{'小时'} = int(int($interval % 86400) / 3600);
+	$secConvertHash{'分钟'} = int(int(int($interval % 86400) % 3600) / 60);
+	$secConvertHash{'秒'} = int(int(int($interval % 86400) % 3600) % 60);
+}
 
 sub markRW {
 	for(my $i = 0; $i < scalar@quizs; $i++) {
@@ -24,6 +55,7 @@ sub sthWrong {
 	}
 }
 
+#########  Main program starts here ################################
 foreach (1..10) {
 	my %quiz = (
 	'add1' => $operand[int(rand(50))],
@@ -47,7 +79,7 @@ for(my $i = 0; $i < scalar@quizs; $i++) {
 	}
 }
 
-print "开始做作业啦\n"; 
+print "开始做作业啦\n------------------\n"; 
 for(my $i = 0; $i < scalar@quizs; $i++) {	
 	my $j = $i + 1;
 	print "第" . "$j" . "题:\n";
@@ -66,11 +98,15 @@ for(my $i = 0; $i < scalar@quizs; $i++) {
 }
 
 markRW;
+$e_time = time();
+intStore $s_time, $e_time;
+print "作业做完花费了:";
+intDisp;
 
 print "\n\n批改作业啦:\n";
 print "-----------------------------\n";
 for(my $i = 0; $i < scalar@quizs; $i++) {	
-	print $quizs[$i]{add1} . $quizs[$i]{sign} . $quizs[$i]{add2} . "=" . $quizs[$i]{try1} . "-------->" . $quizs[$i]{rw} . "\n";
+	print $quizs[$i]{add1} . $quizs[$i]{sign} . $quizs[$i]{add2} . "=" . $quizs[$i]{try1} . "  -------->" . $quizs[$i]{rw} . "\n";
 }
 
 for(my $i = 0; $i < scalar@quizs; $i++) {
@@ -87,6 +123,7 @@ if($w_no == 0) {
 }
 else {
 	print "本次作业你得了: " . int(100*$r_no/scalar(@quizs)) . "分\n";
+	$s_time = time();
 	while(sthWrong) {
 		print "现在开始重做错了的题目吧\n";
 		for(my $i = 0; $i < scalar@quizs; $i++) {
@@ -112,9 +149,12 @@ else {
 				if($quizs[$i]{try1} == $quizs[$i]{answer}) {
 					$quizs[$i]{rw} = '对';
 				}
-				print $quizs[$i]{add1} . $quizs[$i]{sign} . $quizs[$i]{add2} . "=" . $quizs[$i]{try1} . "-------->" . $quizs[$i]{rw} . "\n";
-			}		
+				print $quizs[$i]{add1} . $quizs[$i]{sign} . $quizs[$i]{add2} . "=" . $quizs[$i]{try1} . "  -------->" . $quizs[$i]{rw} . "\n";
+			}
 		}
 	}
+	$e_time = time();
+	intStore $s_time, $e_time;
+	print "作业重新全部做对花费了:";
+	intDisp;
 }
-
