@@ -54,7 +54,7 @@ for(my $i = 0; $i < scalar@quizs; $i++) {
 	print $quizs[$i]{add1} . $quizs[$i]{sign} . $quizs[$i]{add2} . "=";
 	while(my $result = <STDIN>) {
 		chomp $result;
-		if($result !~ /(\+{0,1}|-)\d+$/) {
+		if($result !~ /^(\+{0,1}|-)\d+$/) {
 			print "请输入数字，不要输入乱七八糟的东西哦:";
 			next;
 		}
