@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use Storable qw/nstore retrieve/;
+use Data::Dumper;
 
 my @sign = ('+','-');
 my @operand = (1..50);
@@ -175,6 +176,7 @@ if($w_no != 0) {
 	intervalConvert $s_time, $e_time;
 	print "作业全部做对一共花费了:";
 	intervalDisplay;
+	print "\n";
 }
 else {
 	print "好极了，满分，给你一个大大的ZAN\n";
@@ -182,4 +184,7 @@ else {
 	intervalConvert $s_time, $e_time;
 	print "一共花费了:";
 	intervalDisplay;
+	print "\n";
 }
+
+print Dumper(@quizs);
