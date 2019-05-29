@@ -1,2 +1,0 @@
-why if(! $result =~ /^\d+$/)  does not work as expected while if($result !~ /^\d+$/) works
-how to assign entire record as a 2-D array instead of flat off to one dimension .

@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+use Storable qw/nstore retrieve/;
 
 my @sign = ('+','-');
 my @operand = (1..50);
@@ -11,6 +12,7 @@ my %secConvertHash;
 my $s_time = time();
 my $e_time;
 my $quiz_no = 5;
+my $result_info = "homework_info." . time();
 
 # Printing time spent on the quiz in a readable format
 
@@ -45,7 +47,7 @@ sub intervalConvert {
 
 sub markRW {
 	for(my $i = 0; $i < scalar@quizs; $i++) {
-		if($quizs[$i]{answer} eq $quizs[$i]{try1}) {
+		if($quizs[$i]{answer} eq $quizs[$i]{try}[-1]) {
 			$quizs[$i]{rw} = '对';
 		}
 		else {
@@ -62,20 +64,22 @@ sub sthWrong {
 	}
 }
 
-#########  Main program starts here ################################
+##  Main program starts here ##
+
 foreach (1..$quiz_no) {
 	my %quiz = (
 	'add1' => $operand[int(rand(50))],
 	'sign' => $sign[int(rand(2))],
 	'add2' => $operand[int(rand(50))],
 	'answer' => '',
-	'try1' => '',
-	'try2' => '',
-	'try3' => '',
+	'try' => [],
+	'timespent' => [],
 	'rw' => '',
 	);	
 	push @quizs, {%quiz};
 }
+
+##  Auto generate the answers for each quiz ##
 
 for(my $i = 0; $i < scalar@quizs; $i++) {
 	if($quizs[$i]{sign} eq '+') {
@@ -87,7 +91,9 @@ for(my $i = 0; $i < scalar@quizs; $i++) {
 }
 
 print "开始做作业啦，一共有${quiz_no}题\n------------------\n"; 
+
 for(my $i = 0; $i < scalar@quizs; $i++) {	
+	my $stime = time();
 	my $j = $i + 1;
 	print "第" . "$j" . "题:\n";
 	print $quizs[$i]{add1} . $quizs[$i]{sign} . $quizs[$i]{add2} . "=";
@@ -99,7 +105,9 @@ for(my $i = 0; $i < scalar@quizs; $i++) {
 		}
 		else {
 			$result =~ s/^\+//;
-			$quizs[$i]{try1} = $result; 
+			$quizs[$i]{try}[0] = $result; 
+			my $etime = time();
+			$quizs[$i]{timespent}[0] = ($etime - $stime);
 			last;
 		}
 	}
@@ -114,7 +122,7 @@ intervalDisplay;
 print "\n\n批改作业啦:\n";
 print "-----------------------------\n";
 for(my $i = 0; $i < scalar@quizs; $i++) {	
-	print $quizs[$i]{add1} . $quizs[$i]{sign} . $quizs[$i]{add2} . "=" . $quizs[$i]{try1} . "  -------->" . $quizs[$i]{rw} . "\n";
+	print $quizs[$i]{add1} . $quizs[$i]{sign} . $quizs[$i]{add2} . "=" . $quizs[$i]{try}[-1] . "  -------->" . $quizs[$i]{rw} . "   花了$quizs[$i]{timespent}[0]秒". "\n";
 }
 
 for(my $i = 0; $i < scalar@quizs; $i++) {
@@ -126,25 +134,27 @@ for(my $i = 0; $i < scalar@quizs; $i++) {
 	}	
 }
 
-if($w_no == 0) {
-	print "好极了，满分，给你一个大大的👍\n";
-}
-else {
+if($w_no != 0) {
 	print "本次作业你得了: " . int(100*$r_no/scalar(@quizs)) . "分\n";
-#	$s_time = time();
 	while(sthWrong) {
 		print "现在开始重做错了的题目吧\n";
 		for(my $i = 0; $i < scalar@quizs; $i++) {
+			my $stime = time();
 			if($quizs[$i]{rw} eq '错')	{
 				print $quizs[$i]{add1} . $quizs[$i]{sign} . $quizs[$i]{add2} . "=";
 				while(my $result = <STDIN>) {
 					chomp $result;
-					if($result !~ /(\+{0,1}|-)\d+$/) {
-						print "请输入数字，不要输入乱七八糟的东西哦:";
+					if($result !~ /^[+-]{0,1}[1-9]*\d+$/) {
+						print "请输入数字，（答案允许开头一个正负号）:";
 						next;
 					}
 					else {
-						$quizs[$i]{try1} = $result;
+						$result =~ s/^\+//;
+						my $try_len = scalar @{$quizs[$i]{try}};
+						my $ts_len = scalar @{$quizs[$i]{timespent}};
+						$quizs[$i]{try}[$try_len] = $result;
+						my $etime = time();
+						$quizs[$i]{timespent}[$ts_len] = ($etime - $stime);
 						last;
 					}
 				}
@@ -154,15 +164,22 @@ else {
 		print "-----------------------------\n";
 		for(my $i = 0; $i < scalar@quizs; $i++) {	
 			if($quizs[$i]{rw} eq '错') {
-				if($quizs[$i]{try1} == $quizs[$i]{answer}) {
+				if($quizs[$i]{try}[-1] == $quizs[$i]{answer}) {
 					$quizs[$i]{rw} = '对';
 				}
-				print $quizs[$i]{add1} . $quizs[$i]{sign} . $quizs[$i]{add2} . "=" . $quizs[$i]{try1} . "  -------->" . $quizs[$i]{rw} . "\n";
+				print $quizs[$i]{add1} . $quizs[$i]{sign} . $quizs[$i]{add2} . "=" . $quizs[$i]{try}[-1] . "  -------->" . $quizs[$i]{rw} . "   花了$quizs[$i]{timespent}[-1]秒". "\n";
 			}
 		}
 	}
 	$e_time = time();
 	intervalConvert $s_time, $e_time;
 	print "作业全部做对一共花费了:";
+	intervalDisplay;
+}
+else {
+	print "好极了，满分，给你一个大大的ZAN\n";
+	$e_time = time();
+	intervalConvert $s_time, $e_time;
+	print "一共花费了:";
 	intervalDisplay;
 }
