@@ -1,22 +1,19 @@
-my @test = (
-		{
-			name => liming, 
-			age => 36,
-			child_name => ['niuniu', 'liuliu','liuson']
-		}, 
+use File::Find;
+use Storable qw(nstore retrieve);
 
-		{
-			name => liuqiao,
-			age => 33,
-			child_name => ['yangyi']
+my $file_info;
+find sub {
+	if(/homework_info/)	{
+		my $file_info = retrieve $_;
+		my $quiz_no = scalar @{$file_info};
+		foreach(1..$quiz_no)	{
+			print $file_info->[$_-1]->{add1}, $file_info->[$_-1]->{sign}, $file_info->[$_-1]->{add2}, "=", $file_info->[$_-1]->{try}->[0], "\n";
 		}
-	);
 
+		sub printTry	{
+			while()
+		}
+	}
+}, '.';
 
-my @test2 = (
-		[1,2,3], 
-		[3,4,5,6,7], 
-		[5,6,7]
-	);
-
-print scalar @{$test[0]{child_name}};
+#print "yes" if -f "./homework_info.1559202376" ;
