@@ -92,7 +92,7 @@ else	{
 	@sign = ('+','-');
 }
 
-
+##clear screen according to different OS/shell
 system("cls") if $^O =~ /Win32/i;
 system("clear") if $^O =~ /msys/i;
 system("clear") if $^O =~ /darwin/i;
