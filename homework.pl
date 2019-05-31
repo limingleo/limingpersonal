@@ -249,7 +249,7 @@ if($w_no != 0) {
 				}
 				print sprintf "%-10s", $quiz[$i]{num1} . $quiz[$i]{sign} . $quiz[$i]{num2} . "=" . $quiz[$i]{try}[-1];
 				print sprintf "%15s", "--------> $quiz[$i]{rw} ";
-				print "花了$quiz[$i]{timespent}[0]秒". "\n";
+				print "花了$quiz[$i]{timespent}[-1]秒". "\n";
 			}
 		}
 		print "-------------------------------\n\n";
