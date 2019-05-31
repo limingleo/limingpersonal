@@ -5,6 +5,7 @@ use Storable qw/nstore retrieve/;
 ## Defining variables ##
 my @sign;
 my @operand = (1..50);
+my @operand_multiplication = (1..10);
 my @quiz;
 my $r_no = 0;
 my $w_no = 0;
@@ -106,11 +107,11 @@ if(scalar @result_files)	{
  	my $file_info = retrieve $result_files[0];
  	my $quiz_no = scalar @{$file_info};
  	for(my $i = 0; $i < $quiz_no; $i++)	{
- 		my $quiz_len = length($file_info->[$i]->{add1} . $file_info->[$i]->{sign} . $file_info->[$i]->{add2});
+ 		my $quiz_len = length($file_info->[$i]->{num1} . $file_info->[$i]->{sign} . $file_info->[$i]->{num2});
  		for(my $j = 0; $j < scalar @{$file_info->[$i]->{try}}; $j++)	{
 			my $rw = ($file_info->[$i]->{try}->[$j] == $file_info->[$i]->{answer})?"对":"错";
  			if($j == 0)	{
- 				print sprintf "%-15s", $file_info->[$i]->{add1} . $file_info->[$i]->{sign} . $file_info->[$i]->{add2} . "=" . $file_info->[$i]->{try}->[$j];
+ 				print sprintf "%-15s", $file_info->[$i]->{num1} . $file_info->[$i]->{sign} . $file_info->[$i]->{num2} . "=" . $file_info->[$i]->{try}->[$j];
 				print sprintf "%25s", "--------> 花了$file_info->[$i]->{timespent}->[$j]秒 ($rw)\n";
  			}
  			else	{
@@ -128,28 +129,35 @@ print "\n\n";
 ## Generate quiz ##
 foreach (1..$quiz_no) {
 	my %quiz = (
-	'add1' => $operand[int(rand(50))],
+	'num1' => $operand[int(rand(50))],
 	'sign' => $sign[int(rand(scalar @sign))],
-	'add2' => $operand[int(rand(50))],
+	'num2' => $operand[int(rand(50))],
 	'answer' => '',
 	'try' => [],
 	'timespent' => [],
 	'rw' => '',
 	);	
 
+# If multiplication, we should limit to single digit
+	if($quiz{sign} eq '*')	{
+		$quiz{num1} = $operand_multiplication[int(rand(10))],
+		$quiz{num2} = $operand_multiplication[int(rand(10))],
+	}
+
 	push @quiz, {%quiz};
 
+# Determining the right answer
 	if($quiz[-1]{sign} eq '+') {
-		$quiz[-1]{answer} = $quiz[-1]{add1} + $quiz[-1]{add2};
+		$quiz[-1]{answer} = $quiz[-1]{num1} + $quiz[-1]{num2};
 	}
 	elsif($quiz[-1]{sign} eq '-') {
-		$quiz[-1]{answer} = $quiz[-1]{add1} - $quiz[-1]{add2};
+		$quiz[-1]{answer} = $quiz[-1]{num1} - $quiz[-1]{num2};
 	}
 	elsif($quiz[-1]{sign} eq '*') {
-		$quiz[-1]{answer} = $quiz[-1]{add1} * $quiz[-1]{add2};
+		$quiz[-1]{answer} = $quiz[-1]{num1} * $quiz[-1]{num2};
 	}
 	elsif($quiz[-1]{sign} eq '/') {	
-		$quiz[-1]{answer} = $quiz[-1]{add1} / $quiz[-1]{add2};
+		$quiz[-1]{answer} = $quiz[-1]{num1} / $quiz[-1]{num2};
 	}
 	else	{
 		print "Invalid operating sign, exiting ...\n";
@@ -165,7 +173,7 @@ for(my $i = 0; $i < scalar@quiz; $i++) {
 	my $stime = time();
 	my $j = $i + 1;
 	print "第" . "$j" . "题:\n";
-	print $quiz[$i]{add1} . $quiz[$i]{sign} . $quiz[$i]{add2} . "=";
+	print $quiz[$i]{num1} . $quiz[$i]{sign} . $quiz[$i]{num2} . "=";
 	while(my $result = <STDIN>) {
 		chomp $result;
 		if($result !~ /^[+-]{0,1}[1-9]*\d+$/) {
@@ -191,7 +199,7 @@ print "\n\n批改作业啦:\n";
 markRW;
 print "-------------------------------\n";
 for(my $i = 0; $i < scalar@quiz; $i++) {	
-	print sprintf "%-10s", $quiz[$i]{add1} . $quiz[$i]{sign} . $quiz[$i]{add2} . "=" . $quiz[$i]{try}[-1];
+	print sprintf "%-10s", $quiz[$i]{num1} . $quiz[$i]{sign} . $quiz[$i]{num2} . "=" . $quiz[$i]{try}[-1];
 	print sprintf "%15s", "--------> $quiz[$i]{rw} ";
 	print "花了$quiz[$i]{timespent}[0]秒". "\n";
 }
@@ -213,7 +221,7 @@ if($w_no != 0) {
 		for(my $i = 0; $i < scalar@quiz; $i++) {
 			my $stime = time();
 			if($quiz[$i]{rw} eq '错')	{
-				print $quiz[$i]{add1} . $quiz[$i]{sign} . $quiz[$i]{add2} . "=";
+				print $quiz[$i]{num1} . $quiz[$i]{sign} . $quiz[$i]{num2} . "=";
 				while(my $result = <STDIN>) {
 					chomp $result;
 					if($result !~ /^[+-]{0,1}[1-9]*\d+$/) {
@@ -239,7 +247,7 @@ if($w_no != 0) {
 				if($quiz[$i]{try}[-1] == $quiz[$i]{answer}) {
 					$quiz[$i]{rw} = '对';
 				}
-				print sprintf "%-10s", $quiz[$i]{add1} . $quiz[$i]{sign} . $quiz[$i]{add2} . "=" . $quiz[$i]{try}[-1];
+				print sprintf "%-10s", $quiz[$i]{num1} . $quiz[$i]{sign} . $quiz[$i]{num2} . "=" . $quiz[$i]{try}[-1];
 				print sprintf "%15s", "--------> $quiz[$i]{rw} ";
 				print "花了$quiz[$i]{timespent}[0]秒". "\n";
 			}
