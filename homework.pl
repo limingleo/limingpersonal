@@ -1,11 +1,9 @@
 use strict;
 use warnings;
 use Storable qw/nstore retrieve/;
-use Data::Dumper;
 
 ## Defining variables ##
-
-my @sign = ('+','-');
+my @sign;
 my @operand = (1..50);
 my @quiz;
 my $r_no = 0;
@@ -15,7 +13,7 @@ my %secConvertHash;
 my $s_time = time();
 my $e_time;
 my $quiz_no = 5;
-my $result_info = "homework_info." . time();
+my $result_info = "hwinfo." . time();
 
 ## Printing time spent on the quiz in a readable format
 sub intervalDisplay {
@@ -76,18 +74,62 @@ sub usage	{
 }
 
 ##  Main program starts here, accepting 1 or 0 arguments ##
-if($#ARGV > 0)	{
-	usage;
-}
-else	{
-	$quiz_no = $ARGV[0] if defined $ARGV[0];
+foreach(@ARGV)	{
+	$quiz_no = $_ if /^\d+$/;
+	push @sign, '+' if /\+/;
+	push @sign, '-' if /\-/;
+	push @sign, '*' if /x/i;
+	#push @sign, '/' if /\//;
 }
 
+if(@sign)	{
+	my %tmp;
+	@tmp{@sign} = (1..@sign);
+	@sign = keys %tmp;
+}
+else	{
+	@sign = ('+','-');
+}
+
+
+system("cls") if $^O =~ /Win32/i;
+system("clear") if $^O =~ /msys/i;
+system("clear") if $^O =~ /darwin/i;
+
+## Review last time result
+opendir DIR, '.' or die "Not able to open current directory\n";
+my @dir_content = readdir(DIR);
+close DIR;
+my @result_files = sort { $b cmp $a } grep { -f && /hwinfo/ } @dir_content;
+if(scalar @result_files)	{
+	print "上次作业情况回顾：\n\n";
+ 	my $file_info = retrieve $result_files[0];
+ 	my $quiz_no = scalar @{$file_info};
+ 	for(my $i = 0; $i < $quiz_no; $i++)	{
+ 		my $quiz_len = length($file_info->[$i]->{add1} . $file_info->[$i]->{sign} . $file_info->[$i]->{add2});
+ 		for(my $j = 0; $j < scalar @{$file_info->[$i]->{try}}; $j++)	{
+			my $rw = ($file_info->[$i]->{try}->[$j] == $file_info->[$i]->{answer})?"对":"错";
+ 			if($j == 0)	{
+ 				print sprintf "%-15s", $file_info->[$i]->{add1} . $file_info->[$i]->{sign} . $file_info->[$i]->{add2} . "=" . $file_info->[$i]->{try}->[$j];
+				print sprintf "%25s", "--------> 花了$file_info->[$i]->{timespent}->[$j]秒 ($rw)\n";
+ 			}
+ 			else	{
+				print  sprintf "%-15s", " " x $quiz_len . "=" . $file_info->[$i]->{try}->[$j];
+				print sprintf "%25s", "--------> 花了$file_info->[$i]->{timespent}->[$j]秒 ($rw)\n"; 				
+ 			}
+ 		}
+	}
+}
+else	{
+	print "没有发现上次的作业文件\n";
+}
+
+print "\n\n";
 ## Generate quiz ##
 foreach (1..$quiz_no) {
 	my %quiz = (
 	'add1' => $operand[int(rand(50))],
-	'sign' => $sign[int(rand(2))],
+	'sign' => $sign[int(rand(scalar @sign))],
 	'add2' => $operand[int(rand(50))],
 	'answer' => '',
 	'try' => [],
@@ -100,8 +142,18 @@ foreach (1..$quiz_no) {
 	if($quiz[-1]{sign} eq '+') {
 		$quiz[-1]{answer} = $quiz[-1]{add1} + $quiz[-1]{add2};
 	}
-	else {
+	elsif($quiz[-1]{sign} eq '-') {
 		$quiz[-1]{answer} = $quiz[-1]{add1} - $quiz[-1]{add2};
+	}
+	elsif($quiz[-1]{sign} eq '*') {
+		$quiz[-1]{answer} = $quiz[-1]{add1} * $quiz[-1]{add2};
+	}
+	elsif($quiz[-1]{sign} eq '/') {	
+		$quiz[-1]{answer} = $quiz[-1]{add1} / $quiz[-1]{add2};
+	}
+	else	{
+		print "Invalid operating sign, exiting ...\n";
+		exit 1;
 	}
 }
 
@@ -209,6 +261,5 @@ else {
 	print "\n";
 }
 
+# Save homework infomation for next time review
 nstore \@quiz, $result_info;
-
-#print Dumper(@quiz);
