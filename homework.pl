@@ -74,24 +74,30 @@ sub usage	{
 	exit 1;
 }
 
-##  Main program starts here, accepting 1 or 0 arguments ##
+sub ArrayUniq	{
+	my $var = shift;
+	my %tmp;
+	@tmp{@$var} = (1..@$var);
+	@$var = keys %tmp;
+}
+
+##  Main program starts here
 foreach(@ARGV)	{
 	$quiz_no = $_ if /^\d+$/;
 	push @sign, '+' if /\+/;
 	push @sign, '-' if /\-/;
 	push @sign, 'x' if /x/i;
-	#push @sign, '/' if /\//;
+	push @sign, '÷' if /\//;
 }
 
 # To unique sign array
 if(@sign)	{
-	my %tmp;
-	@tmp{@sign} = (1..@sign);
-	@sign = keys %tmp;
+	ArrayUniq(\@sign);
 }
 else	{
 	@sign = ('+','-');
 }
+
 
 ##clear screen according to different OS/shell
 system("cls") if $^O =~ /Win32/i;			# Windows
@@ -169,7 +175,7 @@ foreach (1..$quiz_no) {
 	elsif($quiz[-1]{sign} eq 'x') {
 		$quiz[-1]{answer} = $quiz[-1]{num1} * $quiz[-1]{num2};
 	}
-	elsif($quiz[-1]{sign} eq '/') {	
+	elsif($quiz[-1]{sign} eq '÷') {	
 		$quiz[-1]{answer} = $quiz[-1]{num1} / $quiz[-1]{num2};
 	}
 	else	{

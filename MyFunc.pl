@@ -11,3 +11,11 @@ sub ArrayMaxLength {
 	return $max;
 }
 
+sub ArrayUniq	{
+	my $var = shift;
+	my %tmp;
+	@tmp{@$var} = (1..@$var);
+	@$var = keys %tmp;
+}
+
+1;
