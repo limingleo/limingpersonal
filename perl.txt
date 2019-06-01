@@ -1,0 +1,1058 @@
+------------------------------------------
+my @arr = qw(bob alice alice chris bob);
+my %h1;
+@h1{@arr} = (1..@arr);
+@arr = keys %h1;
+print "@arr";
+print "\n";
+
+while(my ($key, $value) = each %h1) {
+  print $key, " is ", $value, "\n";
+}
+
+alice chris bob
+alice is 3
+chris is 4
+bob is 5
+
+The hash is populated little differently here. Hash can be populated either for a single key-value or for multiple key value pairs. @h1{@arr}=(1..@arr) translates to @h1{"bob","alice","alice","chris","bob"}=(1,2,3,4,5)
+
+------------------------------------------
+
+------------------------------------------
+
+------------------------------------------
+print sprintf "%10s", "aa" . "bb"     it works
+print sprintf "%10s", "aa", "bb"      it does not work
+------------------------------------------
+How to check the length of imbeded array,
+scalar @{$var[]{}...}
+------------------------------------------
+shift, unshift works on the beginning of the array,
+pop, push works on the end of the array.
+------------------------------------------
+Differenct of %INC and @INC
+
+$ perl -e ' use strict; print map { "$_ => $INC{$_} \n " } keys %INC '
+strict.pm => /usr/share/perl5/core_perl/strict.pm
+------------------------------------------
+To manually specify perl modules path (append), add this to the beginning of the src file.
+
+BEGIN {  push @INC, "C:/Perl64/site/lib";  push @INC, "C:/Perl64/lib"; },   this add the path to the end of the array.
+
+or 
+use lib "C:/Perl64/lib";
+
+or 
+BEGIN { unshift @INC, "C:/Perl64/lib"}, this add the path to the first element of the array
+------------------------------------------
+File handler passed to some subroutine, need to pass the typeglob of the filehandler in order to specify it is a file handler, just like variable/array/hash's.
+mysub *FILEHANDLER
+or pass ref of typglob
+mysub \*FILEHANDLER
+or use this
+mysub *FILEHANDLER{IO}
+if use OO of IO::File, could just pass the variable as the FH is just a normal variable
+mysub $filehandler
+------------------------------------------
+sub new 
+{
+  my $class = shift;  # class name passed from the invoking parameter
+  my $self = {};      # The anonymous hash ref stores dynamic instance data 
+  bless($self, $class);  # Turn the hash into an object
+  return $self; 
+}
+1;    # the module must return, so putting this at the end of the file. 
+------------------------------------------
+cuse constant {
+  TRUE => 1,
+  FALSE => ''
+};
+
+then could use keywords TRUE FALSE. 
+------------------------------------------
+::PERL::BOOK::READ
+Perl One-Liners: 130 Programs That Get Things Done
+------------------------------------------
+perl -ne 'print unless $a{$_}++'
+print all unique lines, equal to unix cmd uniq
+------------------------------------------
+perl -ne 'print if ++$a{$_} == 2'
+print all repeated lines only once
+------------------------------------------
+perl -ne 'print if /regex1/../regex2/'
+print all lines between two regex (including the lines that match)
+------------------------------------------
+perl -ne  '/AAA/ && /BBB/ && print'
+print lines that match regex AAA and BBB in any order.
+------------------------------------------
+perl -ne '/regex/ && $last && print $last; $last = $_'
+This print every line preceding a line that matches a regex. 
+perl -ne 'if($p) {print; $p = 0}  $p++ if /regex/'
+print every line following a line that matches a regex. 
+also do this if want to avoid using if and {}
+perl -ne '$p && print && ($p=0); $p++ if /regex/'
+------------------------------------------
+perl -alne 'print "@{[reverse @F]}"'
+using anonymous array, and then de-ref, put into an "", to enable inter-polation, why not using perl -alne 'print reverse @F',
+as that would not use space character to separate the reversed array. 
+
+if input delimitor is :, could write like this
+perl -F: -alne 'print "@{[reverse @F]}"'
+------------------------------------------
+perl -lne 'print scalar reverse $_'  , if the $_ input is a line string, it will reverse the string from end to beginning, scalar here is to convert the context from the default (reverse $_) as a list to a scalar context, if do not use scalar keyword, would simply reverse a list with only one element. 
+equals to 
+perl -lpe 'print scalar reverse'
+perl -lpe '$_ = reverse'
+------------------------------------------
+Print yesterday’s date
+perl -MPOSIX -le '
+  @now = localtime;
+  $now[3] -= 1;
+  print scalar localtime mktime @now
+'
+Remember that localtime returns a nine-item list (see one-liner 4.18) of various date elements. The fourth element in the list is the current month’s day. If you subtract 1 from this element, you get yesterday.
+
+The mktime function constructs the UNIX epoch time from this modified nine-element list, and the scalar localtime construct prints the new date, which is yesterday. This one-liner also works in edge cases, such as when the current day is the first day of the month. You need the POSIX package because it exports the mktime function.
+
+For example, if it’s Mon May 20 05:49:55 right now, running this one-liner prints Sun May 19 05:49:55.
+------------------------------------------
+perl -lne '(1x$_) !~ /^1?$|^(11+?)\1+$/ && print "$_ is prime"'
+to print if the input is a prime number.
+------------------------------------------
+perl -le 'print scalar(grep { /./ } <>)'
+equals to 
+perl -le 'print ~~grep{/./}<>'
+which get the number of non-empty lines in a file. ( l option remove the line break automatically, but it is not necessary, as by default perl's dot does not match line break )
+here the ~~ is a synonym for scalar, it is used to force grep's context as scalar type, so could return the number of hits grep (ed)
+the space between grep and {} , {} and <> can be removed or not, does not matter, 
+
+or perl -lE 'say~~grep/./,<>'
+if no {} for grep, must use a , to separate. 
+------------------------------------------
+perl -ne '}{ print $. } '  file_name
+this }{ is called eskimo operator, this cmd equals to
+
+perl -e ' while(<>) { }  { print $. } ' file_name
+to jupm reading all lines of the file, then print out the line number of the last line. 
+
+These below are all the same effect.
+
+perl -lne 'END {print $.}'
+perl -le 'print $n = () = <> '
+perl -le 'print $n = (()=<>)'
+perl -le 'print scalar(()=<>)'
+perl -le 'print scalar(@foo=<>)'
+------------------------------------------
+. does not match line break by default, (multi-line mode)
+m/^regex$/s; means single line mode. dot could match line break.
+------------------------------------------
+time: returns seconds since 1970.1.1, 00:00:00, but on MAC OS, use 1904 instead.
+it is used to feed gmtime and localtime;
+------------------------------------------
+Perl calculate date/time, 
+my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+$mday is day of the month, $mon is month of the year [0-11], $year = current year - 1900, $wday is day of the week, 0=Sunday..., $yday is day of year, [0-364], [0-365] for leap year.
+
+perl -MPOSIX -le
+  '@t = localtime; $t[3] -= 1299; print scalar localtime mktime @t'
+
+When localtime assigned to scalar, is something like 
+Thu Jul 26 14:07:49 2018
+------------------------------------------
+$ perl -le 'print map { ("a".."z")[rand 26] } 1..8000' | perl -ne ' my @arr = split //; my %hs; foreach(@arr) { $hs{$_}++; }  print map "$_ => $hs{$_}\n", grep !/\n/, sort keys %hs;'
+
+Why not working for map {$_ => $hs{$_}\n}
+Answer: map does not need the {} or // pairs, but print needs, as there are bare words inside map block, such as => and \n
+
+could re-write like this: 
+print map {$_, " => ", $hs{$_}, "\n"} @arr
+print map "$_ => $hs{$_}\n", @arr
+
+in one word, 
+
+map //, @arr or ();
+map {} @arr or ();
+map {//} @arr or ();
+
+same apply to grep and sort 
+no {}, must use , else do not use , 
+------------------------------------------
+how to assign entire record as a 2-D array instead of flat off to one dimension .
+User reference instead of copying, this applies same to hash, if you want to parse 2 hashs to a function, use reference instead of copying, which will flatten into one hash. 
+------------------------------------------
+my @arr = ('a','b','c');
+my $var1 = ('a','b','c');# value is c
+my $var2 = @arr;    # value is 3
+my ($var3) = @arr;  # value is a
+my $var4 = (1..10);   # value is nothing  ????????????????????????
+------------------------------------------
+乘法口诀表打印
+my $max = 33;
+my $matrix;
+for (my $i = 1; $i < $max; $i++){
+  for (my $j = 0; $j < $max; $j++)  {
+    $matrix->[$i][$j] = $i * $j;
+  }
+}
+my $format = ' %4d' x @{$matrix};
+printf "  i/j $format\n", 0 .. $max;
+for my $i (0 .. $max-1){  printf "%4d: $format\n", $i, @{$matrix->[$i]};
+}
+
+
+
+my $max = 15;
+my $matrix;
+for (my $i = 1; $i <= $max; $i++){
+  for (my $j = 1; $j <= $max; $j++)  {
+    $matrix->[$i-1][$j-1] = $i * $j;
+  }
+}
+my $format = ' %4d' x @{$matrix};
+printf "  i/j $format\n\n", 1 .. $max;
+for my $i (0 .. $max-1) {  
+  printf "%4d: $format\n", $i+1, @{$matrix->[$i]};
+}
+------------------------------------------
+Autovivification example. this simple code create a complicated data structure automatically. 
+use Data::Dumper;
+
+my $ds;
+$ds->{top}[0]{cats}[1]{name} = 'Buster';
+print Dumper($ds);
+------------------------------------------
+Take care of the situation when the input file has last line no '\n'
+------------------------------------------
+while() -- true
+while(0) -- false
+while('0') -- false
+while('') -- false
+------------------------------------------
+因为print并没有立刻打印到屏幕上，只有当输出缓冲区满了，或者遇到回车符号的时候才会输出。
+while(1) {
+  print "output ongoing";
+  sleep(1);
+}
+
+This will not display anything, untill the buffer is full, 
+print "output ongoing\n" will do. 
+
+or set autoflush, 
+$| = 1; 
+or
+(select(STDOUT), $| = 1)[0];
+or
+select((select(STDOUT), $| = 1)[0]);
+------------------------------------------
+use bignum;
+my $fact = 1;
+foreach my $num (1.. $ARGV[0])
+{
+  $fact *= $num;
+}
+print $fact;
+------------------------------------------
+if want to get the number of element from a list, could write this way, but not touching the element
+my $count = () = m/(...)/g;
+my $count =()= split /:/, $line;
+
+array splice is just a list rather than an array, 
+so the assignment  effect will not be same 
+------------------------------------------
+Array and list to assign to a scalar variable:
+my $var = @arr  # return the length of the array
+my $var = qw(aa bb cc)  # $var = cc
+------------------------------------------
+my %hash;
+if($hash{'foo'})  # false
+if(defined($hash{'foo'})) # false
+if(exists $hash{'foo'}) #false
+$hash{'foo'} = undef;
+if($hash{'foo'})  # false
+if(defined($hash{'foo'})) # false
+if(exists $hash{'foo'}) #true
+print keys %hash;     # foo
+
+$hash{'foo'} = '';
+if($hash{'foo'})  # false
+if(defined($hash{'foo'})) # true
+if(exists $hash{'foo'}) # true
+------------------------------------------
+while(my $file = glob('*')) { do_sth($file); }
+if there is a file name as 0, would cause problem. loop exit in advance 
+Write like this would solve the issue.
+while(defined(my $file = glob('*'))) { do_sth($file); }
+
+while(<STDIN>)  equals to while(defined(<STDIN)), automatically
+
+$ perl -MO=Deparse  -e 'while(<STDIN>)  { do_sth($_); } '
+while (defined($_ = readline STDIN)) {
+    do_sth($_);
+}
+-e syntax OK
+
+if want to assign the value to a variable, need to manually do defined check. 
+------------------------------------------
+system multi-parameter form could avoid Shell extension. 
+------------------------------------------
+system: after exit of sub-process, perl will exit or continue
+exec: no more perl process while running exec cmd.
+``: only care about the output, but the output keeps the ending \n, even though in shell, it is removed. 
+------------------------------------------
+use 5.010;
+my $answer = int(1+rand(100));
+while(chomp(my $try = <STDIN>) != $answer)
+{
+  say "too large" if($try > $answer);
+  say "too small" if($try < $answer);
+}
+say "you got it";
+
+if put the <STDIN> inside while loop, will always waiting for input, and won't exit the loop, 
+even though the condition not met. 
+
+This should be the right code:
+
+use 5.010;
+my $answer = int(1+rand(100));
+my $try = undef;
+while($answer != $try)
+{
+  chomp($try = <STDIN>);
+  say "too large" if($try > $answer);
+  say "too small" if($try < $answer);
+}
+say "you got it";
+------------------------------------------
+&& versus and
+|| versus or
+! versus not 
+
+no difference except for priority 
+&&, ||, !  are much higher than and, or, not
+------------------------------------------
+my $name = $input || 'no name';
+if $input value is a valid 0 or '0',  then would be defaulted to 'no name'
+this // will have no such issue, used in 5.010;
+
+use 5.010;
+foreach $try (0, undef, '0', 1, 25)
+{
+  print "Trying [$try] ---> ";
+  my $value = $try // 'default';
+  say "\tgot [$value]";
+}
+------------------------------------------
+split function's separator, avoid using memory parentheses in the pattern since these trigger the (usually) wanted “separator retention mode” (see the perlfunc manpage for details). Use the noncapturing parentheses,  (?:) , in  split if you need to group things.
+------------------------------------------
+in Perl 5.10, 
+\1 could be written as \g{1} ...     (or \g1 also works)
+
+it has no confusion or attempts of correct try
+/(.)\111/,  back ref \1 instead of \11 or \111, because they do not exist
+but using \g{1}, will get ride of the confusion. 
+
+also \g{-1}, means a relative position towards \g{-2}, 
+if added one more group (), has to change the \1 number, but relative back ref \g{-N} would have no such trouble. 
+------------------------------------------
+printf "The items are:\n" . (%10s\n x @items), @items;
+------------------------------------------
+in printf "Monthly interest rate: %.2f%%\n", 5.25/12; 
+in order to output %, need to use %%, instead of \%, this is an exception. 
+------------------------------------------
+print 4+5*4; this is ok as print out the list
+print (4+5)*4;  this is not ok, as print takes () inside as a function behaviour, if want to do that should write it like
+print ((4+5)*4)
+------------------------------------------
+print @array
+print "@array" -- Array interpolation could separate the output with space. 
+------------------------------------------
+./my_program file1 - file2,  read file1 first, then read STDIN, (-),  then file2
+------------------------------------------
+while(<STDIN>), means just a loop, if it is a big file, will only read one line, 
+foreach(<STDIN>), foreach needs a list as its param, will read entire input before the loop. not good for big file read. 
+------------------------------------------
+($fred, $barney) = ($barney, $fred) #交换两个变量
+This is not like C, which has to write 3 lines and use temp variable to exchange 2 variable values. 
+------------------------------------------
+# This module has been deprecated since 5.10
+use threads;
+sub thread_task {
+  threads->create(
+    sub {
+      my $thr_id = threads->self->tid;
+      print "Starting thread $thr_id\n";
+      sleep 5;
+      print "Ending thread $thr_id\n";
+      threads->detach();
+    });
+}
+while(1)  {
+  thread_task();
+  sleep 1;
+}
+------------------------------------------
+why if(! $result =~ /^\d+$/)  does not work as expected while if($result !~ /^\d+$/) works
+! + expression has the highest priority, that's why 
+if(! ($result =~ /^\d+$/)) will work as expected.
+------------------------------------------
+use strict;
+use warnings;
+use Time::HiRes qw(gettimeofday tv_interval usleep); 
+my ($hrs, $mins, $secs, $mils) = (0, 0, 0, 0);
+for my $h (0..23) {
+    for my $m (0..59) {
+        for my $s (0..59) {
+            system("clear");
+            print "$h:$m:$s\n";
+            usleep(1000000);
+        }
+    }
+}
+------------------------------------------
+difference while assign a variable to a list and to an array 
+
+use 5.010;
+my $aa = (1,2,3,4,5);
+say $aa;          # return the last element of the list
+my @array = (2,4,6,8);
+my $bb = @array;   # return the number of elements of the array
+say $bb;
+------------------------------------------
+use 5.010;
+say and print difference:
+say print a ending \n 
+------------------------------------------
+snippet to sort the hash array, by the hash value inside the array . 
+
+#!/usr/bin/perl 
+      use strict; 
+      use warnings; 
+ 
+      my @aliens = ( 
+          { name => 'Jassi', age => 28}, 
+          { name => 'Somnath', age => 27}, 
+          { name => 'Ritesh', age => 24}, 
+          { name => 'Santosh', age => 29}, 
+          { name => 'Ranjan', age => 26}, 
+          { name => 'Kaushik', age => 25}, 
+      ); 
+ 
+      foreach my $person (sort {$a->{name} cmp $b->{name}} @aliens) { 
+          print $person->{name} . " is " . $person->{age} . "\n"; 
+      } 
+      
+      print "--------------------------------------\n";
+
+      foreach my $person (sort {$a->{age} <=> $b->{age}} @aliens) { 
+          print $person->{name} . " is " . $person->{age} . "\n"; 
+      }  
+------------------------------------------
+use Cwd qw(realpath);
+print "'$0' is '", realpath($0), "'\n";       # Print out system based real path
+
+use File::Basename;
+my $fullpath = '/users/al/work/file1.pdf';
+print basename($fullpath);
+print "\n------------------\n";
+print dirname($fullpath);
+
+
+use FindBin;
+print $FindBin::Bin;
+print "\n------------------\n";
+$_ = $ENV{'PWD'};
+s/\//\\/g ;
+print;
+------------------------------------------
+test perl code on Windows CMD, need to write like this:
+perl -e "print 'Hello Word'; "
+instead of 
+perl -e 'print "Hello Word";' 
+that's because On Windows, only the double quote is considered a quote, and the escaping rules are poorly defined and inconsistent.
+Could also use this instead
+perl -e "print qq{Hello Word\n}"
+------------------------------------------
+If your path really does contain spaces then you need to use File::Glob ':bsd_glob', as otherwise the spaces will be treated as separators between multiple glob patterns
+------------------------------------------
+For this hash:  %hash_main{hash_subkey1}{hash_subkey2}[array]
+we should write using 
+	for my $key (keys %{$hash_main{hash_sub1}})
+  foreach(@{$hash_main{hash_sub1}{hash_sub2}})
+instead of 	
+	for my $key (keys %hash_main{$hash_sub1})
+  foreach(@hash_main{hash_sub1}{hash_sub2})
+as this will give error as such:
+	Experimental keys on scalar is now forbidden at * line *.
+------------------------------------------
+%world = (
+  'china' => {
+    'guangdong' => ['guangzhou', 'shenzhen', 'dongguan', 'foshan'],
+    'hubei' => ['jingzhou', 'wuhan', 'yichang', 'xiangfan', 'huangshi'],
+    'hunan' => ['changsha', 'zhuzhou', 'xiangtan'],     
+    },
+  'usa' => {
+    'alaska' => [],
+    'california' => [],
+    'colorado' => [],
+    'connecticut' => [],
+    'florida' => [],
+    'idaho' => []
+    },
+  'india' => {});
+
+for my $country (keys %world)
+{
+  for my $state (keys %{$world{$country}})
+  {
+    foreach(@{$world{$country}{$state}})
+    {
+      print "$country has $state province has city: ", $_, "\n";  
+    }
+  } 
+}
+------------------------------------------
+anonymous in perl:
+$complex = {}   // if inside is a hash structure
+$complex = []   // if inside is an array structure
+$complex = &
+
+Non-anonymous in perl:
+@array = ()     // array
+()              // list
+%hash =()       // hash
+------------------------------------------
+if($Orig_Order_Array[$count] =~ /借款周期/), if write in this way, would error out as such: 
+Use of uninitialized value within @Orig_Order_Array in pattern match (m//) at ycs_win.pl line 67, <Orig_Order_R> line 1488.
+So should write like this:
+if(defined($Orig_Order_Array[$count]) && ($Orig_Order_Array[$count] =~ /借款周期/))
+------------------------------------------
+if perl console report this kind of error:
+Wide character in print at ycs_win.pl line 36, <ORDER_R> line 931.
+Should change the open file line from 
+	open ORDER_W, ">ycsBase\\Orders\\$order_id";
+to 
+	open ORDER_W, '>:encoding(UTF-8)', "$ycsBase\\Orders\\$order_id";
+------------------------------------------
+$order_id = $_;
+if (! -e "$ycsBase\\Orders\\$order_id")
+if this if line gives out the below error:
+Unsuccessful stat on filename containing newline at ycs_win.pl line 35.
+Then, should chomp $order_id;
+------------------------------------------
+#!/ms/dist/perl5/bin/perl5.8
+$file="yes space.txt";
+$prog="cat";
+
+my $pipe="IN";
+my $pid = open $pipe,'-|';
+
+$SIG{PIPE}=sub {die "whoops, $prog pip broken" };
+
+if( $pid ) {   # This is parent processing
+        while(<$pipe>)  {
+                s/a/A/g;
+                print uc;
+        }
+        close($pipe);
+}
+else {   # This is child process which generate the input pipe
+  print "Hello";
+  exec("cat", $file) or die "Can't exec $prog: $!";
+}
+------------------------------------------
+$size=(stat("file_name"))[rand(12)]
+------------------------------------------
+print join(",", (map chr, 65,66,67));
+print join(",", (map {2*$_} 1,2,3));
+print (map "The current number is: $_\n", (1,2,3));
+print join(",", (map {my $value=$_; $value+=1} 1,2,3));
+------------------------------------------
+@array1=(1,2,3,4);
+@array2=grep {$_ > 2} @array1;
+@array3=map {$_ * 2} @array2;
+print $array3[0];
+------------------------------------------
+print sort {$a cmp $b} ("a", "e", "b");	This is to sort by ascending of letters
+print sort {$a <=> $b} (1,5,6);	This is to sort by ascending of numbers
+------------------------------------------
+This one to put special as the last element in the sorted array, anyway.
+
+use 5.010;
+@words = ("aa", "ee", "ff", "dd","special", "xx");
+@sorted=sort {
+  if($a eq "special") {return 1;}
+  elsif($b eq "special") {return -1;}
+  else {return $a cmp $b;}
+  } @words;
+
+say foreach(@sorted);
+------------------------------------------
+This sort the string based on the ending digits
+@digital_sort=sort {
+				substr($a, -1) <=> substr($b, -1) } 
+				qw [ A473 B659 C123 D222 E131];
+------------------------------------------
+in perl command line mode, when need to print the special characters, like ', could not use \', this is just used in scripts, but could use chr(39) instead.
+------------------------------------------
+$msg = 100;
+sub sub1  {
+# $msg = 1000;
+  return 'msg';
+}
+print ${&sub1};     # print 100
+------------------------------------------
+$msg = 100;
+sub sub1  {
+  $msg = 1000;
+  return 'msg';
+}
+print ${&sub1};     # print 1000
+------------------------------------------
+my $msg = 100;
+sub sub1  {
+  $msg = 1000;
+  return 'msg';
+}
+print ${&sub1};     # print null
+------------------------------------------
+$msg = 100;
+sub sub1  {
+  return 'msg';
+}
+print ${&sub1};     # print 100
+------------------------------------------
+my $msg = 100;
+sub sub1  {
+  $msg = 1000;
+  return 'msg';
+}
+print ${\sub1};     # always print msg
+------------------------------------------
+use Getopt::Std;
+our($opt_f, $opt_s);	# here the $opt_[a-z] must be single word, otherwise, it does not recognise, couldn't use $opt_file, or $opt_sys
+getopts('f:s:');
+my $file=$opt_f;
+my $system=$opt_s;
+----------------------------------------------
+use re "debug"; 
+This is to enable debug mode for perl regular expression.
+-------------------------------------
+perl imbedded hash variable %ENV, totally depends on the environment's variables that could pass to perl's script.
+
+use 5.010;
+for my $key (keys %ENV) {
+  if($ENV{$key} =~ /;/) {
+    say $key , "=";
+    my @values = split /;/, $ENV{$key} ;
+    say "\t", $_ foreach(@values);      
+  }
+  else  {
+    say $key , "=" , $ENV{$key};
+  }
+}
+------------------------------------------------------------------------------
+Even you change a dos perl file to executable, still can not execute it in a ./file_nae.pl way, it will be put to shell to execute, and it can not
+recognize, need to convert to dos file before you can invoke perl interpreter to execute it.
+but however, perl filename.pl works. as Perl recognize the dos format.
+------------------------------------------------------------------------------
+$::a means a scalar symbol in a global namespace 
+
+$a = 3.14159;
+{
+  local $a = 3;
+  print "In block, \$a = $a\n";
+  print "In block, \$::a = $::a\n";
+}
+print "Outside block, \$a = $a\n";
+print "Outside block, \$::a = $::a\n";
+
+# This outputs
+In block, $a = 3
+In block, $::a = 3
+Outside block, $a = 3.14159
+Outside block, $::a = 3.14159
+
+ie, 'local' temporarily changes the value of the variable, but only within the scope it exists in.
+so how does that differ from 'my'? 
+'my' creates a variable that does not appear in the symbol table, 
+and does not exist outside of the scope that it appears in. So using similar code:
+
+$a = 3.14159;
+{
+  my $a = 3;
+  print "In block, \$a = $a\n";
+  print "In block, \$::a = $::a\n";
+}
+print "Outside block, \$a = $a\n";
+print "Outside block, \$::a = $::a\n";
+
+# This outputs
+In block, $a = 3
+In block, $::a = 3.14159
+Outside block, $a = 3.14159
+Outside block, $::a = 3.14159
+------------------------------------------------------------------------------
+perl -e '$aa="hello world\n"; use Data::Dumper; print Dumper $aa;' 
+------------------------------------------------------------------------------
+echo "aa\nbb\ncc"|perl -e 'while(<>) {print "$_";}'
+print "aa\nbb\ncc"|perl -e 'while(<>) {print "$_";}'
+in KSH, echo does not interpret \n, but print does, even though both commands has a carriage return at the end.
+in bash, echo -e "aa\nbb\ncc" equals to print "aa\nbb\ncc" in KSH
+------------------------------------------------------------------------------
+$/  when reading a file, it is the delimiter of records. read one line one time
+undef $/; means read all lines one time. same as local $/
+
+use 5.010;
+undef $/;         # different to have this line and not.
+while(<STDIN>)  {
+  say;
+  say "Test line";
+}
+---------------------------------------------------------------------
+unless(open(F1,">f1.txt")) {   die "@!";  } 
+select F1; 
+print "Hello world\n"; 
+select STDOUT; 
+print "Hello world\n"; 
+
+open(F1, "|cat>f1.txt") means open(F1, ">f1.txt");
+here the output sent to F1 is used as input of the commands right after the | which is cat > f1.txt.
+but it works only on Unix/Linux which has cat cmd.
+---------------------------------------------------------------------
+Perl CPAN package "Sybase::Dblib;"
+my $dbh = Sybase::Dblib ->dblogin("omwpt", "password", "server_name");
+if(!($dbh->dbuse("trdaccts_global"))) {die "cannot use trdaccts\n";}
+$sql_Stmt="select top 10 * from user_desk";
+$dbh->dbcmd($sql_stmt);
+$dbh->dbsqlexec;
+while($dbh->dbresults != NO_MORE_RESULTS) {
+  while(@d_accts=$dbh->dbnextrow) {
+    do something here;
+  }
+}
+
+when you want to know how many records returned, there is a function, $dbh->DBCURROW, but it only makes sense after the while loop, otherwise, it will always be 0;
+check the document here
+http://search.cpan.org/~mewp/sybperl-2.19/DBlib/DBlib/pm
+---------------------------------------------------------------------
+$text="here is the texxxxt"; 
+while($text =~ m/x/g) 
+{
+  print "Found another x.\n";
+}
+
+Found another x.
+Found another x.
+Found another x.
+Found another x.
+
+Here must use m/x/g, g means to search the global string, 
+perl will search the next x from the last line it stopped, 
+and m and g can not be ignored, or the program will not stop. 
+---------------------------------------------------------------------
+$var=<> will read from prompting users if no cmd parameters provided. 
+$var=<STDIN> only prompt the user for inputing.
+---------------------------------------------------------------------
+perl - equals perl, the - means input, waiting for input command lines, and __END__ as end of input
+---------------------------------------------------------------------
+whilegetuptss:m:u: opt
+do not forget the : after u
+---------------------------------------------------------------------
+if your argument parameters are shifted, then the number of ARGV, $#ARGV would be decreased accordingly
+---------------------------------------------------------------------
+if you want to use switch() { case // {} structure, need to use Switch;
+---------------------------------------------------------------------
+in Perl, $0 is the script name, but $ARGV[0] is the first argument ...
+---------------------------------------------------------------------
+my $aref = [ [1,2,3],[4,5,6],[7,8,9]]; print $aref->[1]->[2];
+equals
+my $aref = [ [1,2,3],[4,5,6],[7,8,9]]; print $aref->[1][2];
+---------------------------------------------------------------------
+to print a value of some data structure, need to write like below:
+print $hash_var->{key_name}
+as to function, could write like $instance->method_name (bareword)
+---------------------------------------------------------------------
+use 5.010;
+my @old = ("aa:bb", "bb:dd", "cc:ee");
+my @new = map { (split ":",$_)[1] } @old;
+say foreach(@new);
+
+output:
+bb
+dd
+ee
+---------------------------------------------------------------------
+$var=split(/:/, $var2), it will give the number of the returning array
+@var=split(/:/, $var2), it will assign all the elements to the array after the split.
+---------------------------------------------------------------------
+in Perl, system("cmd"); will direct the output/error to screen, but the returning status assigned to the variable if $var=system("cmd");
+but $var=`cmd`; does not direct the output/error to screen, only output to the $var, but if need the error as well, need to do like this $var=`cmd 2>&1`;
+-----------------------------------------------
+$&, the previous match content,
+$`, the string before the match
+$', the string after the match
+$+, is the last matched content that are kept in (), if there are 2 () content, then it means $2
+
+my $var = 'abcdefghijklmn';
+if($var =~ /bc(.{2})(.{3})/)
+{
+  print "The string before the match is: " , $`, "\n";
+  print "The matched string is: ", $&, "\n";
+  print "The string after the match is: " , $' , "\n"; 
+  print "The string in the last bracket is: " , $+, "\n"; 
+  print "The string in the first bracket is: " , $1, "\n"; 
+  print "The string in the second bracket is: " , $2, "\n"; 
+}
+-----------------------------------------------
+use English;
+print $PREMATCH;
+print $POSTMATCH;
+-----------------------------------------------
+in Perl, tr///, could replace all, equals to s///g
+if need to delete the found pattern, shall be like tr/pattern//d
+but s/pattern// is okay. shall not add a "d"
+
+s/\r//g equals tr/\r//d;
+-----------------------------------------------
+Perl readonly constant:
+*MAXFILES=\100
+print $MAXFILES
+if you try to amend it, like
+$MAXFILES = 101;
+It will error out.
+
+---------------------------------------------------------------------
+$msg = "hello from main";
+sub getmessage {
+  $msg = "hello from getmessage";
+  return "msg"
+};
+
+sub getmessage2 {
+    $msg = "hello from getmessage2";
+  return $msg
+};
+
+
+print "${&getmessage}";
+print "\n";
+print &getmessage2;
+print "\n";
+print $msg;
+
+------output-------
+hello from getmessage
+hello from getmessage2
+hello from getmessage2
+
+子程序也会进行全局变量定义，如果不用my 限定的话，关键就是赋值发生的先后顺序
+---------------------------------------------------------------------
+print "${\(uc \"asdklfjasldk\")}";
+
+print uc("asdklfjasldk");
+都是打印里面字符的大写。
+---------------------------------------------------------------------
+当Perl期望数字值的时候，如果使用了非数字字符串，那么这些字符串的计算结果将是0
+---------------------------------------------------------------------
+Perl的真假
+1.  数字0为假
+2.  空的字符串(“”)和字符串”0”为假
+3.  未定义值undef为假
+4.  其他均为真
+---------------------------------------------------------------------
+eq/ge/lt/ge/le/ne的字符串大小比较
+大多数标点符号放在最前面，然后数字，大写字母，小写字母，例如，1506大于Happy, Happy大于happy.
+---------------------------------------------------------------------
+in Perl, could use \nnn (Octonary) to present ASCII characters, or \xnn (Hex) as well
+
+different with 01234 (Octonary) integer, and 0x12abe (Hex), 0b1011 (Binary)
+
+\L: All following letters are lowercase
+\U: All following letters are uppercase
+\Q: Do not look for special pattern characters
+ \L、\U、\Q功能可以由\E关闭掉，如：
+ $a = "T\LHIS IS A \ESTRING"; # same as "This is a STRING"
+---------------------------------------------------------------------
+整数比较操作符
+
+操作符 描述
+< 小于
+> 大于
+==  等于
+<=  小于等于
+>=  大于等于
+!=  不等于
+<=> 比较，返回 1, 0, or -1
+
+操作符<=>结果为：
+  0 - 两个值相等
+  1 - 第一个值大
+  1 - 第二个值大
+
+字符串比较操作符
+
+操作符 描述  　
+lt  小于  　
+gt  大于  　
+eq  等于  　
+le  小于等于  　
+ge  大于等于  　
+ne  不等于 　
+cmp 比较，返回 1, 0, or -1
+
+---------------------------------------------------------------------
+如果字符串中含有非字母且非数字的字符，或数字位于字母中，则经过++运算前值转换为数字零，因此结果为1，如：
+  $stringvar = "ab*c";
+  $stringvar++;
+  $stringvar = "ab5c";
+  $stringvar++; 
+---------------------------------------------------------------------
+my $rst2 = "12a34" + 1;
+print $rst2
+
+output:
+13
+---------------------------------------------------------------------
+look at the difference:
+
+my $result1 = "hello" + 1;
+my $result2 = "hello";
+my $result3 = "hello";
+$result1++;
+print $result1;
+print "\n";
+print $result2;
+$result3 += 1;      // error out
+
+1
+hellp
+---------------------------------------------------------------------
+$scalar = @array; # $scalar = 3,即@array的长度
+($scalar) = @array; # $scalar = 1,即@array第一个元素的值
+---------------------------------------------------------------------
+ /a.*bc/s匹配字符串axxxxx \nxxxxbc，但/a.*bc/则不匹配该字符串。
+
+这个末尾的标识有如下功能：
+
+g 改变模式中的所有匹配
+i 忽略模式中的大小写
+e 替换字符串作为表达式
+m 将待匹配串视为多行
+o 仅赋值一次
+s 将待匹配串视为单行
+x 忽略模式中的空白
+---------------------------------------------------------------------
+子程序中局部变量的定义有两种方法：my和local。其区别是：my定义的变量只在该子程序中存在；而local定义的变量不存在于主程序中，但存在于该子程序和该子程序调用的子程序中(在PERL4中没有my)。定义时可以给其赋值
+
+sub subsubroutine
+{
+  print "Now printing var2: " , $var2, "\n";
+  print "Now printing var1: " , $var1, "\n";
+}
+
+sub subroutine1 
+{
+  my $var1 = "subroutine1 my variable";
+  local $var2 = "subroutine1 local variable";
+  print "var1 being printed within subroutine1 is:", $var1, "\n";
+  print "var2 being printed within subroutine1 is:", $var2, "\n";
+  subsubroutine;
+}
+
+sub main  { subroutine1;}
+
+main;
+
+在perl中，被调用子程序一定要写在调用子程序之前，比如
+sub sub_subrt { do something; }
+sub subrt { sub_subrt; }
+sub main {subrt;}
+main;
+---------------------------------------------------------------------
+预定义的子程序
+  PERL5预定义了三个子程序，分别在特定的时间执行，它们是：BEGIN子程序在程序启动时被调用；END子程序在程序结束时被调用；AUTOLOAD子程序在找不到某个子程序时被调用。你可以自己定义它们，以在特定时间执行所需要的动作。如：
+  BEGIN {
+          print("Hi! Welcome to Perl!\n");
+  }
+AUTOLOAD{
+    print("subroutine $AUTOLOAD not found\n"); # 变量$AUTOLOAD即未找到的子程序名
+    print("arguments passed: @_\n");
+  }
+若同一个预定义子程序定义了多个，则BEGIN顺序执行，END逆序执行。
+---------------------------------------------------------------------
+一定要使用delete函数来删除关联数组的元素，这是唯一的方法
+delete ($fruit{"lime"});
+一定不要对hash数组使用内嵌函数push、pop、shift及splice，因为其元素位置是随机的
+---------------------------------------------------------------------
+$year="x\x4\sf\a\f\baf\fax"; 
+$year=~ s/\\x/\%/g; 
+print $year."\n"; 
+
+
+在字符串中\必须以\\的方式才会有效，否则被视为字符转义符, 
+因此  $year="x\x4\sf\a\f\baf\fax"; 这一句应该不要你想像的结果，
+
+你的意思应该是
+$year="x\\x4\\sf\\a\\f\\baf\\fax";
+---------------------------------------------------------------------
+chomp() function just remove the last \n, if there is not, the string remain the same, it returns the number of characters removed.
+but chop() takes 1 character of a string anyway. it returns the actual char it removes. 
+chop @array, remove the last character of each element of the array
+---------------------------------------------------------------------
+在使用逗号表示千位分隔符时应该使用_而不是逗号,
+比如
+$a  = 4_234_221;
+print "$a";
+
+4234221
+---------------------------------------------------------------------
+Print 打印的参数可以使用，隔开，仅仅作为程序参数的分隔符，并不会在屏幕上显示任何的分隔，当使用.作为分隔符的时候，实际上是连接符，但是与分隔符,貌似没有区别，但是，左右可以使用空格隔开，也可以不用，而.左右必须使用空格隔开，否则是另外一个意思了。
+Print 1.3 打印这个小数，而print 1.3.0;就不知道是什么了，结果是，保存为文件以后，变成，0103 00
+---------------------------------------------------------------------
+$a=42这个表达式的值就会返回42，所以当使用连续赋值的时候可行
+$a=$b=$c=42， a, b, c都被赋值成42
+------------------------------------------
+perl -e ''  to use on Unix/Linux/OSX
+perl -e "" to use on Windows 
+perl -E 'say "hello word"'  -E to enable cmd with all latest features 
+perl -n wrap the code when using -e/-E options in a while with a diamond operator 
+  perl -n -E 'say if /code/' file.txt   equals
+  perl -E 'while(<>) {say if /code/; } file.txt'
+perl -n to specify input, if no input file, will take cmd as input. 
+perl -p is similar to perl -n, but it also prints the content of $_ at the end of each iteration, no need to explicitly write print ($_);
+perl -i is in-place editing, will write back the content to the same file it was taken from. 
+perl -i.bak, to backup the original file to .bak first before write back 
+perl -c check syntax only (runs BEGIN and check blocks)
+perl –S script_file : enable perl to search path of the script file from PATH env variable
+perl -e, could omit the ; of each line, also means the executable codes.
+perl -0 to specify record separator, \n is default
+perl -00, enable paragraph mode, 2 or more \n
+perl -0777, disable separator, entire file as a record
+perl –V Detailed installation information
+perl –v Version and patch levels
+------------------------------------------------------------------------------
+perl -n:
+-n assume "while (<>) {... }" loop around program
+echo $PATH |perl -e '$_=<>; s/:/\n/g; print;'
+equals to 
+echo $PATH |perl -ne 's/:/\n/g; print;'
+------------------------------------------
+perl -l option:
+when read from file, chomp line separator automatically, 
+assign $\ = $/, append \n at the end of print content. 
+normally $\ is empty.
+
+make sure the file is unix format, not dos.
+------------------------------------------
+$. : line numbering
+$/ : input record separator
+$\ : output record separator
+$| variable defines the buffer of file handler behaviour, 
+$| = 1; to refresh buffer as soon as output action is done. 
+$^V 存储perl版本号，相当于vchr(5).chr(12).chr(3)
+$] 存储另外形式版本号，相当于5.012003
+@INC indicates where Perl modules and packages are stored
+$,  : print output field separator
+$"  : array interpolation separator,   $; = ":";  print "@array", will separate array elements using :, print @array does not 
