@@ -233,3 +233,4 @@ print "作业全部做对一共花费了:";
 intervalConvert $s_time, $e_time;
 intervalDisplay;
 nstore \@quiz, $result_info;
+print "\n";
