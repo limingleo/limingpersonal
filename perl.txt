@@ -1,4 +1,14 @@
 ------------------------------------------
+
+------------------------------------------
+
+------------------------------------------
+
+------------------------------------------
+$0: Script name, $1,$2... used in Regex only
+$ARGV[0], first argument, $ARGV[-1], last argument
+$0 in shell cmd is script name, $1 in shell cmd is the 1st argument ...
+------------------------------------------
 my @arr = qw(bob alice alice chris bob);
 my %h1;
 @h1{@arr} = (1..@arr);

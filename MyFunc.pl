@@ -18,4 +18,27 @@ sub ArrayUniq	{
 	@$var = keys %tmp;
 }
 
+sub isComposite	{
+	my $num = shift;
+	my $count = -1;
+	for my $i (1..int(sqrt $num))	{
+		if ($num % $i == 0)	{
+			$count++;
+		}
+	}
+	return $count;
+}
+
+sub compositeElements	{
+	my $num = shift;
+	my @elements=();
+	for my $i (2..int(sqrt $num))	{
+		if($num % $i == 0)	{
+			push @elements, $i;
+			push @elements, $num/$i;
+		}
+	}
+	return sort {$a <=> $b} @elements;
+}
+
 1;

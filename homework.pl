@@ -5,7 +5,7 @@ use Storable qw/nstore retrieve/;
 ## Defining variables ##
 my @sign;
 my @operand = (1..50);
-my @operand_multiplication = (1..10);
+my @operand_multiplication = (1..9);
 my @quiz;
 my $r_no = 0;
 my @interval;
@@ -15,6 +15,7 @@ my $e_time;
 my $quiz_no = 10;
 my $result_info = "hwinfo." . time();
 my $first = 0;
+
 
 ## Printing time spent on the quiz in a readable format
 sub intervalDisplay {
@@ -84,6 +85,30 @@ sub ArrayUniq	{
 	@tmp{@$var} = (1..@$var);
 	@$var = keys %tmp;
 }
+
+sub isComposite	{
+	my $num = shift;
+	my $count = -1;
+	for my $i (1..int(sqrt $num))	{
+		if ($num % $i == 0)	{
+			$count++;
+		}
+	}
+	return $count;
+}
+
+sub compositeElements	{
+	my $num = shift;
+	my @elements=();
+	for my $i (2..int(sqrt $num))	{
+		if($num % $i == 0)	{
+			push @elements, $i;
+			push @elements, $num/$i;
+		}
+	}
+	return sort {$a <=> $b} @elements;
+}
+
 
 ##  Main program starts here
 foreach(@ARGV)	{
@@ -156,8 +181,19 @@ foreach (1..$quiz_no) {
 
 	# If multiplication, would limit to single digit
 	if($quiz{sign} eq 'x')	{
-		$quiz{num1} = $operand_multiplication[int(rand(10))],
-		$quiz{num2} = $operand_multiplication[int(rand(10))],
+		$quiz{num1} = $operand_multiplication[int(rand(9))],
+		$quiz{num2} = $operand_multiplication[int(rand(9))],
+	}
+
+	if($quiz{sign} eq '÷')	{
+		while(1)	{
+			$quiz{num1} = int(rand(98)+2);
+			if(isComposite $quiz{num1})	{
+				my @division = compositeElements $quiz{num1};
+				$quiz{num2} = $division[int rand(scalar@division)];
+				last;
+			}
+		}
 	}
 
 	push @quiz, {%quiz};
