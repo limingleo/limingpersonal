@@ -74,9 +74,11 @@ sub sthWrong {
 
 sub usage	{
 	print "运行方法：\n";
-	print "\$ perl $0 10  * 出10道题 *\n";
-	print "\$ perl $0     * 出5道题  *\n";
-	exit 1;
+	print "\$ perl $0          * 出10道题，仅有加减法    *\n";
+	print "\$ perl $0 x/       * 出10道题，仅有乘除法    *\n";
+	print "\$ perl $0 20       * 出20道题，仅有加减法    *\n";
+	print "\$ perl $0 +-x/ 20  * 出20道题，有加减乘除法  *\n";
+	print "-----------------------------------------------------\n\n";
 }
 
 sub ArrayUniq	{
@@ -111,6 +113,14 @@ sub compositeElements	{
 
 
 ##  Main program starts here
+
+##clear screen according to different OS/shell
+system("cls") if $^O =~ /Win32/i;			# Windows
+system("clear") if $^O =~ /msys/i;			# GIT bash
+system("clear") if $^O =~ /darwin/i;		# OSX
+
+usage if $#ARGV == -1;
+
 foreach(@ARGV)	{
 	$quiz_no = $_ if /^\d+$/;
 	push @sign, '+' if /\+/;
@@ -122,11 +132,6 @@ foreach(@ARGV)	{
 # To unique sign array
 if(@sign)	{	ArrayUniq(\@sign);}
 else	{	@sign = ('+','-');}
-
-##clear screen according to different OS/shell
-system("cls") if $^O =~ /Win32/i;			# Windows
-system("clear") if $^O =~ /msys/i;			# GIT bash
-system("clear") if $^O =~ /darwin/i;		# OSX
 
 ## Review last time result
 opendir DIR, '.' or die "Not able to open current directory\n";
