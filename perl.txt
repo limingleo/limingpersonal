@@ -1,9 +1,24 @@
 ------------------------------------------
 
 ------------------------------------------
-
+use Net::Telnet();
+$t = new Net::Telnet(Timeout=>10, Prompt=>'/bash\$ $/');
+$t ->open("sparky");
+$t->login($username, $passwd);
+@lines = $t->cmd("who");
+print @lines;
 ------------------------------------------
+3 ways executing windows
+$WshShell = Win32::OLE->new("WScript.Shell");
+$WshShell->Run("$ls_cmd");
 
+my $command = 'c:\windows\notepad.exe';
+my $args = 'notepad.exe c:\my documents\test.txt';
+my $pid = 0;
+Win32::Spawn($cmd, $args, $pid) or die;
+Win32::FormatMessage(Win32::GetLastError());
+
+Win32::Process::Create($process,$program,$comd,$handle,$option,$dir);
 ------------------------------------------
 $0: Script name, $1,$2... used in Regex only
 $ARGV[0], first argument, $ARGV[-1], last argument
