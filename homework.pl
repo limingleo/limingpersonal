@@ -16,7 +16,6 @@ my $quiz_no = 10;
 my $result_info = "hwinfo." . time();
 my $first = 0;
 
-
 ## Printing time spent on the quiz in a readable format
 sub intervalDisplay {
 	if($secConvertHash{'天'}) 	{		print $secConvertHash{'天'} . '天';	}
