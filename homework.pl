@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use Storable qw/nstore retrieve/;
+use Getopt::Std;
 
 ## Defining variables ##
 my @sign;
@@ -15,6 +16,13 @@ my $e_time;
 my $quiz_no = 10;
 my $result_info = "hwinfo." . time();
 my $first = 0;
+
+##clear screen according to different OS/shell
+sub clearScreen {
+	system("cls") if $^O =~ /Win32/i;			# Windows
+	system("clear") if $^O =~ /msys/i;			# GIT bash
+	system("clear") if $^O =~ /darwin/i;		# OSX
+}
 
 ## Printing time spent on the quiz in a readable format
 sub intervalDisplay {
@@ -63,7 +71,6 @@ sub markRW {
 	else	{		print "本次作业累计得分: " . int(100*$r_no/scalar(@quiz)) . "分\n";		}
 }
 
-
 ## Decide if fully correct or not 
 sub sthWrong {
 	for(my $i = 0; $i < scalar@quiz; $i++) {
@@ -72,12 +79,16 @@ sub sthWrong {
 }
 
 sub usage	{
+	clearScreen;
 	print "运行方法：\n";
-	print "\$ perl $0          * 出10道题，仅有加减法    *\n";
-	print "\$ perl $0 x/       * 出10道题，仅有乘除法    *\n";
-	print "\$ perl $0 20       * 出20道题，仅有加减法    *\n";
-	print "\$ perl $0 +-x/ 20  * 出20道题，有加减乘除法  *\n";
-	print "-----------------------------------------------------\n\n";
+	print "\$ perl $0          * 默认出10道题，仅有加减法  *\n";
+	print "\$ perl $0 x/       * 出10道题，仅有乘除法      *\n";
+	print "\$ perl $0 20       * 出20道题，仅有加减法      *\n";
+	print "\$ perl $0 +-x/ 20  * 出20道题，有加减乘除法    *\n";
+	print "\$ perl $0 -v 3     * 仅查看上3次作业完成情况   *\n";
+	print "--------------------------------------------------------\n\n";
+	print "按回车键继续";
+	<STDIN>
 }
 
 sub ArrayUniq	{
@@ -110,13 +121,81 @@ sub compositeElements	{
 	return sort {$a <=> $b} @elements;
 }
 
+sub dispResult	{
+	my $count = shift;
+	opendir DIR, '.' or die "Not able to open current directory\n";
+	my @dir_content = readdir(DIR);
+	close DIR;
+
+	my @result_files = sort { $b cmp $a } grep { -f && /hwinfo/ } @dir_content;
+	my $no_of_files = scalar @result_files;
+	if($no_of_files)	{
+		if($no_of_files < $count)	{	
+			print "仅能显示过去$no_of_files次的作业情况，按回车继续\n";	
+			$count = $no_of_files;
+			<STDIN>
+		}
+		while($count--)	{
+			clearScreen;
+			my $hw_time = (split /\./, $result_files[$count])[-1];
+			intervalConvert $hw_time, $s_time;
+			print "作业情况回顾:\n--------------------------------\n做题时间：";
+			intervalDisplay;
+			print "之前\n";
+			
+		 	my $file_info = retrieve $result_files[$count];
+		 	my $quiz_no = scalar @{$file_info};
+		 	my $total_time = 0;
+
+		 	foreach(@{$file_info})	{
+		 		foreach(@{$_->{timespent}})	{
+		 			$total_time += $_;
+		 		}
+		 	}
+
+		 	print "题目总数：$quiz_no\n完成时间：";
+		 	intervalConvert 0, $total_time;
+		 	intervalDisplay;
+		 	print "\n--------------------------------\n\n";
+
+		 	for(my $i = 0; $i < $quiz_no; $i++)	{
+		 		for(my $j = 0; $j < scalar @{$file_info->[$i]->{try}}; $j++)	{
+					my $rw = ($file_info->[$i]->{try}->[$j] == $file_info->[$i]->{answer})?"对":"错";
+		 			if($j == 0)	{
+		 				print sprintf "%-3s", $file_info->[$i]->{num1};
+		 				print $file_info->[$i]->{sign};
+		 				print sprintf "%3s", $file_info->[$i]->{num2};
+		 				print "  =  ";
+		 				print sprintf "%3s", $file_info->[$i]->{try}->[$j];
+						print sprintf "%-20s", "     --------> ";
+						print sprintf "%-15s", "花了$file_info->[$i]->{timespent}->[$j]秒";
+						print "($rw)\n";
+		 			}
+		 			else	{
+						print sprintf "%-10s", " " x 9 . "=  ";
+						print sprintf "%3s", $file_info->[$i]->{try}->[$j];
+						print sprintf "%-20s", "     --------> ";
+						print sprintf "%-15s", "花了$file_info->[$i]->{timespent}->[$j]秒";
+						print "($rw)\n";
+		 			}
+		 		}
+			}
+			print "\n按回车键继续";
+			<STDIN>
+		}
+	}
+	else	{	print "没有发现上次完成的作业\n"; }
+}
 
 ##  Main program starts here
 
-##clear screen according to different OS/shell
-system("cls") if $^O =~ /Win32/i;			# Windows
-system("clear") if $^O =~ /msys/i;			# GIT bash
-system("clear") if $^O =~ /darwin/i;		# OSX
+our $opt_v;
+getopts('v:');
+
+if($opt_v)	{
+	dispResult $opt_v;	
+	exit 0;
+}
 
 usage if $#ARGV == -1;
 
@@ -131,44 +210,6 @@ foreach(@ARGV)	{
 # To unique sign array
 if(@sign)	{	ArrayUniq(\@sign);}
 else	{	@sign = ('+','-');}
-
-## Review last time result
-opendir DIR, '.' or die "Not able to open current directory\n";
-my @dir_content = readdir(DIR);
-close DIR;
-my @result_files = sort { $b cmp $a } grep { -f && /hwinfo/ } @dir_content;
-if(scalar @result_files)	{
-	my $hw_time = (split /\./, $result_files[0])[-1];
-	intervalConvert $hw_time, $s_time;
-	print "上次作业（完成于";
-	intervalDisplay;
-	print "之前）情况回顾：\n\n";
- 	my $file_info = retrieve $result_files[0];
- 	my $quiz_no = scalar @{$file_info};
- 	for(my $i = 0; $i < $quiz_no; $i++)	{
- 		for(my $j = 0; $j < scalar @{$file_info->[$i]->{try}}; $j++)	{
-			my $rw = ($file_info->[$i]->{try}->[$j] == $file_info->[$i]->{answer})?"对":"错";
- 			if($j == 0)	{
- 				print sprintf "%-3s", $file_info->[$i]->{num1};
- 				print $file_info->[$i]->{sign};
- 				print sprintf "%3s", $file_info->[$i]->{num2};
- 				print "  =  ";
- 				print sprintf "%3s", $file_info->[$i]->{try}->[$j];
-				print sprintf "%-20s", "     --------> ";
-				print sprintf "%-15s", "花了$file_info->[$i]->{timespent}->[$j]秒";
-				print "($rw)\n";
- 			}
- 			else	{
-				print sprintf "%-10s", " " x 9 . "=  ";
-				print sprintf "%3s", $file_info->[$i]->{try}->[$j];
-				print sprintf "%-20s", "     --------> ";
-				print sprintf "%-15s", "花了$file_info->[$i]->{timespent}->[$j]秒";
-				print "($rw)\n";
- 			}
- 		}
-	}
-}
-else	{	print "没有发现上次完成的作业\n"; }
 
 print "\n\n";
 ## Generate quiz and populate correct answers
@@ -210,6 +251,9 @@ foreach (1..$quiz_no) {
 	else						  {		print "Invalid operating sign, exiting ...\n"; exit 1;	}
 }
 
+# Display last one result by default
+dispResult 1;
+clearScreen;
 print "开始做作业啦，一共有${quiz_no}题\n";
 print "-----------------------\n"; 
 
@@ -274,3 +318,8 @@ intervalConvert $s_time, $e_time;
 intervalDisplay;
 nstore \@quiz, $result_info;
 print "\n";
+# Depends on network availability, so better not enable this.
+#print "Going to add file $result_info to git\n";
+#system(qq/git add $result_info/);
+#system(qq/git commit -m "added homework result $result_info"/);
+#system("git push origin master");
