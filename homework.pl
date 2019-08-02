@@ -86,7 +86,7 @@ sub usage	{
 	print "\$ perl $0 20       * 出20道题，仅有加减法      *\n";
 	print "\$ perl $0 +-x/ 20  * 出20道题，有加减乘除法    *\n";
 	print "\$ perl $0 -v 3     * 仅查看上3次作业完成情况   *\n";
-	print "--------------------------------------------------------\n\n";
+	print "----------------------------------------------------------\n\n";
 	print "按回车键继续";
 	<STDIN>
 }
@@ -139,7 +139,7 @@ sub dispResult	{
 			clearScreen;
 			my $hw_time = (split /\./, $result_files[$count])[-1];
 			intervalConvert $hw_time, $s_time;
-			print "作业情况回顾:\n--------------------------------\n做题时间：";
+			print "作业情况回顾:\n---------------------------------\n做题时间：";
 			intervalDisplay;
 			print "之前\n";
 			
@@ -156,7 +156,7 @@ sub dispResult	{
 		 	print "题目总数：$quiz_no\n完成时间：";
 		 	intervalConvert 0, $total_time;
 		 	intervalDisplay;
-		 	print "\n--------------------------------\n\n";
+		 	print "\n---------------------------------\n\n";
 
 		 	for(my $i = 0; $i < $quiz_no; $i++)	{
 		 		for(my $j = 0; $j < scalar @{$file_info->[$i]->{try}}; $j++)	{
@@ -255,7 +255,7 @@ foreach (1..$quiz_no) {
 dispResult 1;
 clearScreen;
 print "开始做作业啦，一共有${quiz_no}题\n";
-print "-----------------------\n"; 
+print "-------------------------\n"; 
 
 ## First time to do homework, hopefully all correct for the 1st time. 
 for(my $i = 0; $i < scalar@quiz; $i++) {	
